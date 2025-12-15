@@ -1,5 +1,8 @@
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 # Import modules directly - they are now in the project root
 from modules.profile.router import router as profile_router
@@ -7,6 +10,9 @@ from modules.jobs.router import router as jobs_router
 from modules.jd.router import router as jd_router
 from modules.matching.router import router as matching_router
 from modules.resume.router import router as resume_router
+
+# Static files directory
+STATIC_DIR = Path(__file__).parent.parent / "static"
 
 
 def create_app() -> FastAPI:
@@ -27,9 +33,21 @@ def create_app() -> FastAPI:
     app.include_router(matching_router, prefix="/matching", tags=["matching"])
     app.include_router(resume_router, prefix="/resume", tags=["resume"])
 
+    @app.get("/", include_in_schema=False)
+    async def root():
+        """Serve the frontend HTML page"""
+        index_file = STATIC_DIR / "index.html"
+        if index_file.exists():
+            return FileResponse(index_file)
+        return {"message": "CV Endpoint Service", "docs": "/docs"}
+
     @app.get("/health", tags=["meta"], summary="Service health check")
     async def health():
         return {"status": "ok"}
+
+    # Mount static files (CSS, JS) - must be after routes
+    if STATIC_DIR.exists():
+        app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
     return app
 

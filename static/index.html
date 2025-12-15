@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>简历画像与职位匹配控制台</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/static/styles.css?v=10" />
+  </head>
+  <body>
+    <header class="hero">
+      <div class="hero__primary">
+        <span class="badge hero__badge">AI Career Studio</span>
+        <h1>智能画像 · 岗位匹配 · 定制简历</h1>
+        <p class="subtitle">
+          一次输入即可完成画像结构化、岗位智能匹配与定制简历生成，为候选人提供高品质求职体验。
+        </p>
+        <div class="hero__actions">
+          <button id="analyzeProfile" class="btn primary hero__cta">上传或输入后点击「启动画像」</button>
+          <button id="toggleAdvanced" class="btn ghost small">高级设置</button>
+        </div>
+      </div>
+      <div class="hero__visual">
+        <div class="orb orb--primary"></div>
+        <div class="orb orb--secondary"></div>
+        <div class="matrix"></div>
+      </div>
+    </header>
+
+    <section id="advancedSettings" class="panel advanced hidden glass">
+      <div class="panel-title compact">
+        <h2>高级设置</h2>
+        <span class="muted">仅限内部调试使用</span>
+      </div>
+      <div class="advanced__grid">
+        <label>
+          <span>API Base</span>
+          <input id="apiBase" value="https://cvendpoint.onrender.com" />
+        </label>
+        <label>
+          <span>Session ID</span>
+          <input id="sessionId" value="demo-session-001" />
+        </label>
+        <div class="advanced__cta">
+          <button id="pingApi" class="btn outline small">测试连通性</button>
+          <span id="pingStatus" class="muted small-text"></span>
+        </div>
+      </div>
+    </section>
+
+    <main class="layout">
+      <section class="panel glass" id="panel-profile">
+        <div class="panel-title">
+          <span class="badge">STEP 1</span>
+          <h2>画像构建</h2>
+          <div class="panel-actions compact">
+            <button id="loadSample" class="btn outline small">填充示例</button>
+            <button id="clearProfile" class="btn ghost small">清空</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <label for="freeText" class="field-label">自由文本描述</label>
+          <textarea
+            id="freeText"
+            rows="8"
+            placeholder="用自然语言描述你的经历、技能、教育、项目、课程等（支持中文/英文）"
+          ></textarea>
+          <div class="upload-row">
+            <label id="dropzone" class="dropzone">
+              <strong>拖拽简历到此处</strong>
+              <span>或点击选择文件（PDF / DOC / DOCX / HTML，≤10MB）</span>
+              <input type="file" id="resumeFile" accept=".pdf,.doc,.docx,.html" />
+            </label>
+          </div>
+          <div class="status-line">
+            <span id="analyzeStatus" class="muted">尚未调用</span>
+          </div>
+          <div id="profileSummary" class="summary empty scrollable">
+            <p>画像结果会展示在这里。</p>
+          </div>
+          <details class="details">
+            <summary>展开结构化 JSON</summary>
+            <pre id="profileJson" class="code-block"></pre>
+          </details>
+        </div>
+      </section>
+
+      <section class="panel glass" id="panel-jobs">
+        <div class="panel-title">
+          <span class="badge">STEP 2</span>
+          <h2>职位检索与处理</h2>
+        </div>
+        <div class="panel-body">
+          <div class="recommend-wrapper">
+            <div class="recommend-header">
+              <button id="roleRecommendBtn" class="btn outline">智能岗位推荐</button>
+              <span id="roleRecommendStatus" class="muted"></span>
+            </div>
+            <div id="roleRecommendations" class="role-recommendations empty">
+              <p>点击“智能岗位推荐”后将展示适合的岗位方向与命中关键词。</p>
+            </div>
+          </div>
+          <div class="form-grid">
+            <label>
+              <span>职位标题</span>
+              <input id="titles" placeholder="例如：Software Engineer, Developer" />
+            </label>
+            <label>
+              <span>关键字</span>
+              <input id="keywords" placeholder="例如：Python, C++, FastAPI" />
+            </label>
+            <label>
+              <span>地区</span>
+              <input id="locations" value="AU" />
+            </label>
+            <label>
+              <span>Seek 数量</span>
+              <input id="seekCount" type="number" value="5" min="0" max="50" />
+            </label>
+            <label>
+              <span>LinkedIn 数量</span>
+              <input id="linkedinCount" type="number" value="5" min="0" max="50" />
+            </label>
+            <label>
+              <span>总限制</span>
+              <input id="limit" type="number" value="10" min="1" max="100" />
+            </label>
+          </div>
+          <div class="button-row">
+            <button id="startStream" class="btn primary">开始流式搜索</button>
+            <button id="stopStream" class="btn ghost">停止</button>
+            <button id="nextBatch" class="btn outline">继续查找</button>
+            <span id="progress" class="muted"></span>
+          </div>
+          <div id="jobs" class="job-list empty scrollable">
+            <p class="placeholder">点击“开始流式搜索”后，职位卡片会出现在这里。</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel glass" id="panel-resume">
+        <div class="panel-title">
+          <span class="badge">STEP 3</span>
+          <h2>匹配与简历输出</h2>
+        </div>
+        <div class="panel-body">
+          <div class="options-row">
+            <label class="toggle">
+              <input id="renderToggle" type="checkbox" checked />
+              <span>JD 抓取失败时尝试 Playwright 渲染</span>
+            </label>
+            <div class="button-row">
+              <button id="downloadDocx" class="btn outline">导出 DOCX</button>
+              <button id="downloadPdf" class="btn outline">导出 PDF</button>
+            </div>
+          </div>
+          <div id="matchResult" class="match-result muted">
+            尚未匹配，请在职位卡片中依次点击“解析 JD → 匹配 → 预览”。
+          </div>
+          <iframe id="preview" title="预览" loading="lazy"></iframe>
+        </div>
+      </section>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script src="/static/script.js?v=10" defer></script>
+  </body>
+</html>
