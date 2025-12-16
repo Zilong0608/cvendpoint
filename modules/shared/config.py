@@ -17,3 +17,7 @@ OPENAI_MODEL_REFINE = os.getenv("OPENAI_MODEL_REFINE", OPENAI_MODEL_WEB)
 OPENAI_MODEL_PROFILE_EXTRACT = os.getenv("OPENAI_MODEL_PROFILE_EXTRACT", "gpt-5-nano-2025-08-07")
 PROFILE_EXTRACT_LLM = os.getenv("PROFILE_EXTRACT_LLM", "1")  # '0' to disable LLM for profile extraction
 COURSE_ENRICH_PROVIDER = os.getenv("COURSE_ENRICH_PROVIDER", "db")  # db | none
+
+# Supabase configuration
+SUPABASE_URL = os.getenv("SUPABASE_URL", "")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")

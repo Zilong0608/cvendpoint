@@ -11,6 +11,9 @@ from modules.jd.router import router as jd_router
 from modules.matching.router import router as matching_router
 from modules.resume.router import router as resume_router
 
+# Import Supabase client
+from modules.shared.database import supabase
+
 # Static files directory
 STATIC_DIR = Path(__file__).parent.parent / "static"
 
@@ -43,7 +46,40 @@ def create_app() -> FastAPI:
 
     @app.get("/health", tags=["meta"], summary="Service health check")
     async def health():
-        return {"status": "ok"}
+        db_status = "disconnected"
+        if supabase:
+            try:
+                # 尝试连接数据库
+                supabase.table("uni_course1").select("*", count="exact").limit(1).execute()
+                db_status = "connected"
+            except Exception as e:
+                db_status = f"error: {str(e)}"
+        
+        return {
+            "status": "ok",
+            "database": db_status
+        }
+    
+    @app.get("/courses", tags=["database"], summary="Get courses from database")
+    async def get_courses(limit: int = 10):
+        """
+        从 uni_course1 表中获取课程数据
+        """
+        if not supabase:
+            return {"error": "数据库未连接"}
+        
+        try:
+            response = supabase.table("uni_course1").select("*").limit(limit).execute()
+            return {
+                "success": True,
+                "count": len(response.data),
+                "data": response.data
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e)
+            }
 
     # Mount static files (CSS, JS) - must be after routes
     if STATIC_DIR.exists():

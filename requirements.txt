@@ -10,3 +10,4 @@ playwright>=1.47.0
 pdfminer.six>=20231228
 openai>=1.43.0
 python-multipart>=0.0.6
+supabase>=2.0.0
